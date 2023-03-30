@@ -1,7 +1,6 @@
 /__pycache__
 /cg_buttons
 /.git
-
 # for testing pixel generation
 *.mdp
 test.py
