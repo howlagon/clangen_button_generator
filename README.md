@@ -6,6 +6,10 @@ thanks, howl <3
 
 right now, documentation will be in [the wiki](https://github.com/howlagon/clangen_button_generator/wiki/)
 
+## Requirements
+- [Python 3.11.0](https://www.python.org/downloads/release/python-3110/) or [greater](https://www.python.org/downloads/), 3.11.0 was tested  
+- [Pip3](https://pip.pypa.io/en/stable/installation/)
+
 ## Install / Setup (Windows)
 ```bat
 git clone https://github.com/howlagon/clangen_button_generator/ clangen_button_generator
@@ -23,7 +27,7 @@ python -m pip install -r requirements.txt
 
 ## Example Usage:
 ```py
-from shadow import TextButton
+from buttons import TextButton
 image = TextButton.new_long_button(
                                    width = 52, height = 15, # This must be half of the final product, *subject to change
                                    unavailable = False,
