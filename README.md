@@ -29,7 +29,7 @@ python -m pip install -r requirements.txt
 ```py
 from buttons import TextButton
 image = TextButton.new_long_button(
-                                   width = 52, height = 15, # This must be half of the final product, *subject to change
+                                   width = 52, height = 15, # recommended to be 1/2 final size, then scaled * subject to change
                                    unavailable = False,
                                    hover = False,
                                    rounded_corners = [True, True, True, True],
