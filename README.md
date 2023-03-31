@@ -1,5 +1,5 @@
 # clangen_button_generator
-### A prototype PIL-based button generation system for Thlumyn/clangen
+### A prototype PIL-based button generation system for [Thlumyn/clangen](https://github.com/Thlumyn/clangen)
   
 please don't look at this code, its genuinely one of the worst things ive written so far. theres nested ternary statements, conditional lists, SO much repetition, and its just ugly to look at.  
 thanks, howl <3
@@ -27,29 +27,31 @@ python -m pip install -r requirements.txt
 
 ## Example Usage:
 ```py
-from buttons import TextButton
-image = TextButton.new_long_button(
-                                   width = 52, height = 15, # recommended to be 1/2 final size, then scaled * subject to change
-                                   unavailable = False,
-                                   hover = False,
-                                   rounded_corners = [True, True, True, True],
-                                   shadows = [True, True, False, False])
-image = image.resize((image.width*2, image.height*2), Image.Resampling.NEAREST)
+from rewrite import TextButton
+image = NewButtonImage.new(
+                           width = 52, height = 15,
+                           unavailable = False,
+                           hover = False,
+                           rounded_corners = [True, True, True, True],
+                           shadows = [True, True, False, False])
+image = image.resize((image.width*2, image.height*2), Image.Resampling.NEAREST) # optional, but may(?) save time
 image.show()
 ```
 
 ## TODO
 ### High Priority
 > - [ ] document, document, document. 
-> - [ ] add font support, potentially custom font
-> - [ ] fix square button to actually be good, and have the new features
-> - [ ] create "hanging board" style buttons, including custom dangerous buttons
+> - [ ] create "hanging board" style buttons, including custom dangerous buttons (!!)
+> - [ ] delete unused variables when possible
+> - [ ] general optimizations
 ### Med Priority
 > - [ ] comment this awful code, for fucks sake please for the love of god
-> - [ ] add labels for med den
-> - [ ] add sideways labels / text
-> - [ ] proper color support, not just using pre-defined constants (!!)
-
+> - [ ] proper color support, AND reimpliment hover/disabled
+### Low Priority
+> - [ ] test height > width
 ### And finally,
+> - [ ] pep8 standardizing. gross
 > - [ ] actually impliment this into the code. 
   - this will be a separate branch
+
+special thanks to [luna (ImLvna)](https://github.com/ImLvna) for realizing you could just add a label onto a button, saving me from the hell of generating text
