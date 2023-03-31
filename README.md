@@ -1,6 +1,7 @@
 # clangen_button_generator
 ### A prototype PIL-based button generation system for [Thlumyn/clangen](https://github.com/Thlumyn/clangen)
-  
+ 
+#### watch me suffer in real-time with [trello](https://trello.com/b/g0XJs6PY/clangen)  
 please don't look at this code, its genuinely one of the worst things ive written so far. theres nested ternary statements, conditional lists, SO much repetition, and its just ugly to look at.  
 thanks, howl <3
 
