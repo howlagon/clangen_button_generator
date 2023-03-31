@@ -27,7 +27,7 @@ python -m pip install -r requirements.txt
 
 ## Example Usage:
 ```py
-from rewrite import TextButton
+from rewrite import NewButtonImage
 image = NewButtonImage.new(
                            width = 52, height = 15,
                            unavailable = False,
