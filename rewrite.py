@@ -261,6 +261,28 @@ class ButtonSquare():
         self.fill()
         return self.bitmap
 
+class Cache():
+    storage = []
+    @staticmethod
+    def store(object, **kwargs):
+        store = {
+            "object": object,
+        }
+        for kw in kwargs:
+            store[kw] = kwargs[kw]
+        Cache.storage.append(store)
+        del store
+    @staticmethod
+    def get(**kwargs):
+        object = [item for item in Cache.storage if all(key in kwargs and kwargs[key] == item[key] for key in kwargs)]
+        if len(object) == 0: return False
+        return object[0]
+    @staticmethod
+    def delete(object=None, **kwargs):
+        if object:
+            item = [item for item in Cache.storage if all(key in kwargs and kwargs[key] == item[key] for key in kwargs)]
+            if len(item) == 0: return None
+
 class NewButtonImage():
     @staticmethod
     def new_long_button(
@@ -271,10 +293,20 @@ class NewButtonImage():
                         rounded_corners: Union[bool, tuple, list] = [True, True, True, True], 
                         shadows: Union[bool, tuple, list] = [True, True, False, False],
                         hanging: bool = True) -> Image.Image:
-        button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging)
+        cached = Cache.get(width=width, height=height, hover=hover, unavailable=unavailable,
+                           rounded_corners = rounded_corners, shadows=shadows, hanging=hanging)
+        if cached:
+            button = cached
+        else: 
+            button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging)
+            Cache.store(button, width=width, height=height, hover=hover, unavailable=unavailable,
+                        rounded_corners=rounded_corners, shadows=shadows, hanging=hanging)
+        print(Cache.storage)
         bitmap = button.build()
         arr = array(bitmap(), dtype=uint8)
         new_image = Image.fromarray(arr)
+
+        del cached, button, bitmap, arr
         return new_image
 
     @staticmethod
@@ -284,10 +316,19 @@ class NewButtonImage():
                           unavailable: bool = False,
                           rounded_corners: Union[bool, tuple, list] = [True, True, True, True],
                           shadows: Union[bool, tuple, list] = [True, False, False, False]) -> Image.Image:
-        button = ButtonSquare(size, hover, unavailable, rounded_corners, shadows=shadows)
+        cached = Cache.get(width=size, height=size, hover=hover, unavailable=unavailable,
+                           rounded_corners = rounded_corners, shadows=shadows, hanging=False)
+        if cached:
+            button = cached
+        else:
+            button = ButtonSquare(size, hover, unavailable, rounded_corners, shadows=shadows)
+            Cache.store(button, width=size, height=size, hover=hover, unavailable=unavailable,
+                        rounded_corners=rounded_corners, shadows=shadows, hanging=False)
         bitmap = button.build()
         arr = array(bitmap(), dtype=uint8)
         new_image = Image.fromarray(arr)
+
+        del cached, button, bitmap, arr
         return new_image
     
     @staticmethod
@@ -299,13 +340,22 @@ class NewButtonImage():
             rounded_corners: Union[bool, tuple, list] = [True, True, True, True],
             shadows: Union[bool, tuple, list] = [True, False, False, False],
             hanging: bool = False) -> Image.Image:
-        if width == height:
-            if hanging:
-                warnings.warn(" * NewButtonImage.ButtonSquare does not support the hanging option, ignoring", Warning, stacklevel=2)
-            button = ButtonSquare(width, hover, unavailable, rounded_corners, shadows)
-        else:
-            button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging)
+        cached = Cache.get(width=width, height=height, hover=hover, unavailable=unavailable,
+                           rounded_corners = rounded_corners, shadows=shadows, hanging=hanging)
+        if cached:
+            button = cached
+        else: 
+            if width == height:
+                if hanging:
+                    warnings.warn(" * NewButtonImage.ButtonSquare does not support the hanging option, ignoring", Warning, stacklevel=2)
+                button = ButtonSquare(width, hover, unavailable, rounded_corners, shadows)
+            else:
+                button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging)
+            Cache.store(button, width=width, height=height, hover=hover, unavailable=unavailable,
+                        rounded_corners=rounded_corners, shadows=shadows, hanging=hanging)
         bitmap = button.build()
         arr = array(bitmap(), dtype=uint8)
         new_image = Image.fromarray(arr)
+
+        del cached, button, bitmap, array
         return new_image
