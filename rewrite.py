@@ -1,6 +1,7 @@
 from PIL import Image
 from numpy import array, uint8
 from typing import Union
+import warnings
 
 class Bitmap():
     """Dynamic list (arr) storage that allows for inserting on multiple lines"""
@@ -26,24 +27,30 @@ class ButtonLong():
                  hover: bool = False,
                  unavailable: bool = False,
                  rounded_corners = True,
-                 shadows = [True, True, False, False]
+                 shadows = [True, True, False, False],
+                 hanging: bool = False
     ) -> None:
         self.width = width
         self.height = height
         self.hover = hover
         self.unavailable = unavailable
+        self.hanging = hanging
+        self.offset = 3 if self.hanging else 0
         self.palette = [(0, 0, 0, 0), (47, 41, 24, 255), (121, 96, 69, 255), (101, 89, 52, 255), (87, 76, 45, 255)]
         if type(rounded_corners) == bool:
             self.rounded_corners = (rounded_corners, rounded_corners, rounded_corners, rounded_corners)
         elif len(rounded_corners) == 4:
             self.rounded_corners = list(rounded_corners)
-        else: exit('long err 1 please delete this howl when you commit')
+        else:
+            raise ValueError("rounded_corners must be of type bool or type [list, tuple] with length 4")
+
         if type(shadows) == bool:
             self.shadows = (shadows, shadows, shadows, shadows)
         elif len(shadows) == 4:
             self.shadows = list(shadows)
-        else: exit('long err 2 also delete this one too k thanks :)')
-        self.bitmap = Bitmap(width, height)
+        else: 
+            raise ValueError("shadows must be of type bool or type [list, tuple] with length 4")
+        self.bitmap = Bitmap(width, height + self.offset)
     def generate_corner(self, round=True, shaded_one=False, shaded_two=False):
         shade_0 = self.palette[4] if shaded_one else self.palette[3]
         shade_1 = self.palette[4] if shaded_two else self.palette[3]
@@ -66,24 +73,24 @@ class ButtonLong():
     def corners(self):
         # corner 1
         if self.rounded_corners[0]:
-            self.bitmap.insert_at(0, 0, self.generate_corner(True, self.shadows[0], self.shadows[1]))
+            self.bitmap.insert_at(0, self.offset, self.generate_corner(True, self.shadows[0], self.shadows[1]))
         else:
-            self.bitmap.insert_at(0, 0, self.generate_corner(False, self.shadows[0], self.shadows[1]))
+            self.bitmap.insert_at(0, self.offset, self.generate_corner(False, self.shadows[0], self.shadows[1]))
         # corner 3
         if self.rounded_corners[1]:
-            self.bitmap.insert_at(self.width-7, 0, [item[::-1] for item in self.generate_corner(True, self.shadows[0], self.shadows[2])])
+            self.bitmap.insert_at(self.width-7, self.offset, [item[::-1] for item in self.generate_corner(True, self.shadows[0], self.shadows[2])])
         else:
-            self.bitmap.insert_at(self.width-7, 0, [item[::-1] for item in self.generate_corner(False, self.shadows[0], self.shadows[2])])
+            self.bitmap.insert_at(self.width-7, self.offset, [item[::-1] for item in self.generate_corner(False, self.shadows[0], self.shadows[2])])
         # corner 7
         if self.rounded_corners[2]:
-            self.bitmap.insert_at(0, self.height-5, self.generate_corner(True, self.shadows[3], self.shadows[1])[::-1])
+            self.bitmap.insert_at(0, self.height-5+self.offset, self.generate_corner(True, self.shadows[3], self.shadows[1])[::-1])
         else:
-            self.bitmap.insert_at(0, self.height-5, self.generate_corner(False, self.shadows[3], self.shadows[1])[::-1])
+            self.bitmap.insert_at(0, self.height-5+self.offset, self.generate_corner(False, self.shadows[3], self.shadows[1])[::-1])
         # corner 9
         if self.rounded_corners[3]:
-            self.bitmap.insert_at(self.width-7, self.height-5, [item[::-1] for item in self.generate_corner(True, self.shadows[3], self.shadows[2])[::-1]])
+            self.bitmap.insert_at(self.width-7, self.height-5+self.offset, [item[::-1] for item in self.generate_corner(True, self.shadows[3], self.shadows[2])[::-1]])
         else:
-            self.bitmap.insert_at(self.width-7, self.height-5, [item[::-1] for item in self.generate_corner(False, self.shadows[3], self.shadows[2])[::-1]])
+            self.bitmap.insert_at(self.width-7, self.height-5+self.offset, [item[::-1] for item in self.generate_corner(False, self.shadows[3], self.shadows[2])[::-1]])
 
     def fill(self):
         top_bottom = [
@@ -105,36 +112,43 @@ class ButtonLong():
         ]
         # 2
         if self.shadows[0]:
-            self.bitmap.insert_at(7, 0, top_bottom_shaded)
+            self.bitmap.insert_at(7, self.offset, top_bottom_shaded)
         else:
-            self.bitmap.insert_at(7, 0, top_bottom)
+            self.bitmap.insert_at(7, self.offset, top_bottom)
         # 4
         if self.shadows[1]:
-            self.bitmap.insert_at(0, 5, left_right_shaded)
+            self.bitmap.insert_at(0, 5+self.offset, left_right_shaded)
         else:
-            self.bitmap.insert_at(0, 5, left_right)
+            self.bitmap.insert_at(0, 5+self.offset, left_right)
         # 6
         if self.shadows[2]:
-            self.bitmap.insert_at(self.width-7, 5, [item[::-1] for item in left_right_shaded])
+            self.bitmap.insert_at(self.width-7, 5+self.offset, [item[::-1] for item in left_right_shaded])
         else:
-            self.bitmap.insert_at(self.width-7, 5, [item[::-1] for item in left_right])
+            self.bitmap.insert_at(self.width-7, 5+self.offset, [item[::-1] for item in left_right])
         # 8
         if self.shadows[3]:
-            self.bitmap.insert_at(7, self.height-5, top_bottom_shaded[::-1])
+            self.bitmap.insert_at(7, self.height-5+self.offset, top_bottom_shaded[::-1])
         else:
-            self.bitmap.insert_at(7, self.height-5, top_bottom[::-1])
+            self.bitmap.insert_at(7, self.height-5+self.offset, top_bottom[::-1])
         # 5
-        self.bitmap.insert_at(7, 5, [
+        self.bitmap.insert_at(7, 5+self.offset, [
             *[[*[self.palette[3]]*(self.width-14)]]*(self.height-10)
+        ])
+    def hang(self):
+        self.bitmap.insert_at(6, 0, [
+            *[[self.palette[2], self.palette[4], self.palette[3], self.palette[4], self.palette[2]]]*3
+        ])
+        self.bitmap.insert_at(self.width-6-5, 0, [
+            *[[self.palette[2], self.palette[4], self.palette[3], self.palette[4], self.palette[2]]]*3
         ])
     
     def build(self):
         self.corners()
         self.fill()
+        if self.hanging: self.hang()
         return self.bitmap
 
 class ButtonSquare():
-    # oh dear god
     def __init__(self,
                  size: int,
                  hover: bool = False,
@@ -151,12 +165,15 @@ class ButtonSquare():
             self.rounded_corners = (rounded_corners, rounded_corners, rounded_corners, rounded_corners)
         elif len(rounded_corners) == 4:
             self.rounded_corners = list(rounded_corners)
-        else: exit('long err 1 please delete this howl when you commit')
+        else:
+            raise ValueError("rounded_corners must be of type bool or type [list, tuple] with length 4")
+
         if type(shadows) == bool:
-            self.shadows = [shadows, shadows, shadows, shadows]
+            self.shadows = (shadows, shadows, shadows, shadows)
         elif len(shadows) == 4:
             self.shadows = list(shadows)
-        else: exit('long err 2 also delete this one too k thanks :)')
+        else: 
+            raise ValueError("shadows must be of type bool or type [list, tuple] with length 4")
         self.bitmap = Bitmap(size, size)
     def generate_corner(self, round=True, shaded_one=False, shaded_two=False):
         shade_0 = self.palette[4] if shaded_one else self.palette[3]
@@ -252,8 +269,9 @@ class NewButtonImage():
                         hover: bool = False, 
                         unavailable: bool = False, 
                         rounded_corners: Union[bool, tuple, list] = [True, True, True, True], 
-                        shadows: Union[bool, tuple, list] = [True, True, False, False]) -> Image.Image:
-        button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows)
+                        shadows: Union[bool, tuple, list] = [True, True, False, False],
+                        hanging: bool = True) -> Image.Image:
+        button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging)
         bitmap = button.build()
         arr = array(bitmap(), dtype=uint8)
         new_image = Image.fromarray(arr)
@@ -279,11 +297,14 @@ class NewButtonImage():
             hover: bool = False,
             unavailable: bool = False,
             rounded_corners: Union[bool, tuple, list] = [True, True, True, True],
-            shadows: Union[bool, tuple, list] = [True, False, False, False]) -> Image.Image:
+            shadows: Union[bool, tuple, list] = [True, False, False, False],
+            hanging: bool = False) -> Image.Image:
         if width == height:
+            if hanging:
+                warnings.warn(" * NewButtonImage.ButtonSquare does not support the hanging option, ignoring", Warning, stacklevel=2)
             button = ButtonSquare(width, hover, unavailable, rounded_corners, shadows)
         else:
-            button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows)
+            button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging)
         bitmap = button.build()
         arr = array(bitmap(), dtype=uint8)
         new_image = Image.fromarray(arr)
