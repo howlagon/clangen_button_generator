@@ -42,14 +42,13 @@ image.show()
 ## TODO
 ### High Priority
 > - [ ] document, document, document. 
-> - [ ] create "hanging board" style buttons, including custom dangerous buttons (!!)
+> - [x] create "hanging board" style buttons
 > - [ ] delete unused variables when possible
 > - [ ] general optimizations
 ### Med Priority
 > - [ ] comment this awful code, for fucks sake please for the love of god
-> - [ ] proper color support, AND reimpliment hover/disabled
-### Low Priority
-> - [ ] test height > width
+> - [x] proper color support, AND reimpliment hover/disabled
+> - [ ] custom dangerous buttons?
 ### And finally,
 > - [ ] pep8 standardizing. gross
 > - [ ] actually impliment this into the code. 
