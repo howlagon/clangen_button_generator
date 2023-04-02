@@ -5,7 +5,7 @@
 please don't look at this code, its genuinely one of the worst things ive written so far. theres nested ternary statements, conditional lists, SO much repetition, and its just ugly to look at.  
 thanks, howl <3
 
-right now, documentation will be in [the wiki](https://github.com/howlagon/clangen_button_generator/wiki/)
+right now, documentation will be in [the wiki](https://github.com/howlagon/clangen_button_generator/wiki/) (outdated)
 
 ## Requirements
 - [Python 3.11.0](https://www.python.org/downloads/release/python-3110/) or [greater](https://www.python.org/downloads/), 3.11.0 was tested  

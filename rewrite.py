@@ -1,7 +1,31 @@
-from PIL import Image
+# @transfoxes 2023
+# https://github.com/howlagon
+
+from PIL import Image, ImageEnhance
 from numpy import array, uint8
 from typing import Union
 import warnings
+class Palette():
+    palette = [
+        (0, 0, 0, 0), (47, 41, 24, 255), (121, 96, 69, 255), (101, 89, 52, 255), (87, 76, 45, 255)
+    ]
+    hover = [
+        (0, 0, 0, 0), (14, 11, 4, 255), (41, 27, 15, 255), (30, 24, 9, 255), (23, 18, 7, 255)
+    ]
+    unavailable = [
+        (0, 0, 0, 0), (58, 56, 51, 255), (112, 107, 100, 255), (92, 88, 80, 255), (80, 78, 70, 255)
+    ]
+    @staticmethod
+    def create(outline: tuple, inline: tuple, shadow: tuple, fill: tuple):
+        for color in [outline, inline, shadow, fill]:
+            if len(color) != 3 and len(color) != 4:
+                raise ValueError("Color must be a 3 or 4 element tuple")
+        return [
+            ((*outline, 255) if len(outline) == 3 else outline), 
+            ((*inline, 255) if len(inline) == 3 else inline), 
+            ((*fill, 255) if len(fill) == 3 else fill), 
+            ((*shadow, 255) if len(shadow) == 3 else shadow)
+        ]
 
 class Bitmap():
     """Dynamic list (arr) storage that allows for inserting on multiple lines"""
@@ -28,7 +52,8 @@ class ButtonLong():
                  unavailable: bool = False,
                  rounded_corners = True,
                  shadows = [True, True, False, False],
-                 hanging: bool = False
+                 hanging: bool = False,
+                 palette = None
     ) -> None:
         self.width = width
         self.height = height
@@ -36,7 +61,20 @@ class ButtonLong():
         self.unavailable = unavailable
         self.hanging = hanging
         self.offset = 3 if self.hanging else 0
-        self.palette = [(0, 0, 0, 0), (47, 41, 24, 255), (121, 96, 69, 255), (101, 89, 52, 255), (87, 76, 45, 255)]
+        if type(palette) == list and len(palette) == 4:
+            if unavailable:
+                self.palette = Palette.unavailable
+            else:
+                self.palette = [(0, 0, 0, 0), *palette]
+        else: 
+            if palette != None: 
+                warnings.warn(f" * NewButtonImage 'palette' expected None or list of length 4, got {type(palette)}{(' of length ' + len(palette)) if type(palette) == list else ''}. Using fallback palette...", Warning, stacklevel=3)
+            if unavailable:
+                self.palette = Palette.unavailable
+            elif hover:
+                self.palette = Palette.hover
+            else:
+                self.palette = Palette.palette
         if type(rounded_corners) == bool:
             self.rounded_corners = (rounded_corners, rounded_corners, rounded_corners, rounded_corners)
         elif len(rounded_corners) == 4:
@@ -154,13 +192,27 @@ class ButtonSquare():
                  hover: bool = False,
                  unavailable: bool = False,
                  rounded_corners = True,
-                 shadows = [True, True, False, False]
+                 shadows = [True, True, False, False],
+                 palette: Union[None, list] = []
     ) -> None:
         self.size = size
         self.calculated = size-4
         self.hover = hover
         self.unavailable = unavailable
-        self.palette = [(0, 0, 0, 0), (47, 41, 24, 255), (121, 96, 69, 255), (101, 89, 52, 255), (87, 76, 45, 255)]
+        if type(palette) == list and len(palette) == 4:
+            if unavailable:
+                self.palette = Palette.unavailable
+            else:
+                self.palette = [(0, 0, 0, 0), *palette]
+        else: 
+            if palette != None: 
+                warnings.warn(f" * NewButtonImage 'palette' expected None or list of length 4, got {type(palette)}{(' of length ' + len(palette)) if type(palette) == list else ''}. Using fallback palette...", Warning, stacklevel=3)
+            if unavailable:
+                self.palette = Palette.unavailable
+            elif hover:
+                self.palette = Palette.hover
+            else:
+                self.palette = Palette.palette
         if type(rounded_corners) == bool:
             self.rounded_corners = (rounded_corners, rounded_corners, rounded_corners, rounded_corners)
         elif len(rounded_corners) == 4:
@@ -264,9 +316,9 @@ class ButtonSquare():
 class Cache():
     storage = []
     @staticmethod
-    def store(object, **kwargs):
+    def store(image, **kwargs):
         store = {
-            "object": object,
+            "image": image,
         }
         for kw in kwargs:
             store[kw] = kwargs[kw]
@@ -278,10 +330,17 @@ class Cache():
         if len(object) == 0: return False
         return object[0]
     @staticmethod
-    def delete(object=None, **kwargs):
-        if object:
+    def delete(image=None, **kwargs):
+        if not image:
             item = [item for item in Cache.storage if all(key in kwargs and kwargs[key] == item[key] for key in kwargs)]
             if len(item) == 0: return None
+            Cache.storage.remove(item)
+            return True
+        else:
+            item = [item for item in Cache.storage if image == item['image']]
+            if len(item) == 0: return None
+            Cache.storage.remove(item)
+            return True
 
 class NewButtonImage():
     @staticmethod
@@ -292,21 +351,30 @@ class NewButtonImage():
                         unavailable: bool = False, 
                         rounded_corners: Union[bool, tuple, list] = [True, True, True, True], 
                         shadows: Union[bool, tuple, list] = [True, True, False, False],
-                        hanging: bool = True) -> Image.Image:
+                        hanging: bool = True,
+                        palette = None) -> Image.Image:
         cached = Cache.get(width=width, height=height, hover=hover, unavailable=unavailable,
-                           rounded_corners = rounded_corners, shadows=shadows, hanging=hanging)
+                           rounded_corners = rounded_corners, shadows=shadows, hanging=hanging, palette=palette)
         if cached:
-            button = cached
+            new_image = cached['image']
         else: 
             button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging)
-            Cache.store(button, width=width, height=height, hover=hover, unavailable=unavailable,
-                        rounded_corners=rounded_corners, shadows=shadows, hanging=hanging)
-        print(Cache.storage)
-        bitmap = button.build()
-        arr = array(bitmap(), dtype=uint8)
-        new_image = Image.fromarray(arr)
-
-        del cached, button, bitmap, arr
+            print(Cache.storage)
+            bitmap = button.build()
+            arr = array(bitmap(), dtype=uint8)
+            new_image = Image.fromarray(arr)
+            Cache.store(new_image, width=width, height=height, hover=hover, unavailable=unavailable,
+                        rounded_corners=rounded_corners, shadows=shadows, hanging=False, palette=palette)
+            if palette and hover:
+                contrast = ImageEnhance.Contrast(new_image)
+                new_image = contrast.enhance(1.1)
+                saturation = ImageEnhance.Color(new_image)
+                new_image = saturation.enhance(1.03)
+                luminosity = ImageEnhance.Brightness(new_image)
+                new_image = luminosity.enhance(0.4)
+                del contrast, saturation, luminosity
+            del button, bitmap, arr, palette
+        del cached
         return new_image
 
     @staticmethod
@@ -315,20 +383,29 @@ class NewButtonImage():
                           hover: bool = False,
                           unavailable: bool = False,
                           rounded_corners: Union[bool, tuple, list] = [True, True, True, True],
-                          shadows: Union[bool, tuple, list] = [True, False, False, False]) -> Image.Image:
+                          shadows: Union[bool, tuple, list] = [True, False, False, False],
+                          palette=None) -> Image.Image:
         cached = Cache.get(width=size, height=size, hover=hover, unavailable=unavailable,
-                           rounded_corners = rounded_corners, shadows=shadows, hanging=False)
+                           rounded_corners = rounded_corners, shadows=shadows, hanging=False, palette=palette)
         if cached:
-            button = cached
+            new_image = cached['image']
         else:
             button = ButtonSquare(size, hover, unavailable, rounded_corners, shadows=shadows)
-            Cache.store(button, width=size, height=size, hover=hover, unavailable=unavailable,
-                        rounded_corners=rounded_corners, shadows=shadows, hanging=False)
-        bitmap = button.build()
-        arr = array(bitmap(), dtype=uint8)
-        new_image = Image.fromarray(arr)
-
-        del cached, button, bitmap, arr
+            bitmap = button.build()
+            arr = array(bitmap(), dtype=uint8)
+            new_image = Image.fromarray(arr)
+            Cache.store(new_image, width=size, height=size, hover=hover, unavailable=unavailable,
+                        rounded_corners=rounded_corners, shadows=shadows, hanging=False, palette=palette)
+            if palette and hover:
+                contrast = ImageEnhance.Contrast(new_image)
+                new_image = contrast.enhance(1.1)
+                saturation = ImageEnhance.Color(new_image)
+                new_image = saturation.enhance(1.03)
+                luminosity = ImageEnhance.Brightness(new_image)
+                new_image = luminosity.enhance(0.4)
+                del contrast, saturation, luminosity
+            del button, bitmap, arr, palette
+        del cached
         return new_image
     
     @staticmethod
@@ -339,23 +416,38 @@ class NewButtonImage():
             unavailable: bool = False,
             rounded_corners: Union[bool, tuple, list] = [True, True, True, True],
             shadows: Union[bool, tuple, list] = [True, False, False, False],
-            hanging: bool = False) -> Image.Image:
+            hanging: bool = False,
+            palette: Union[None, list] = None) -> Image.Image:
+        if hanging and palette:
+            raise NotImplementedError(" * NewButtonImage does not support 'hanging' and 'palette' options together.")
+            # if ignored, which i don't recommend
+            warnings.warn(" * NewButtonImage does not support 'hanging' and 'palette', ignoring palette option...", Warning, stacklevel=2)
+            palette = None
         cached = Cache.get(width=width, height=height, hover=hover, unavailable=unavailable,
-                           rounded_corners = rounded_corners, shadows=shadows, hanging=hanging)
+                           rounded_corners = rounded_corners, shadows=shadows, hanging=hanging,
+                           palette=palette)
         if cached:
-            button = cached
+            new_image = cached['image']
         else: 
             if width == height:
                 if hanging:
-                    warnings.warn(" * NewButtonImage.ButtonSquare does not support the hanging option, ignoring", Warning, stacklevel=2)
-                button = ButtonSquare(width, hover, unavailable, rounded_corners, shadows)
+                    warnings.warn(" * NewButtonImage.ButtonSquare does not support the 'hanging' option, ignoring", Warning, stacklevel=2)
+                button = ButtonSquare(width, hover, unavailable, rounded_corners, shadows, palette=palette)
             else:
-                button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging)
-            Cache.store(button, width=width, height=height, hover=hover, unavailable=unavailable,
-                        rounded_corners=rounded_corners, shadows=shadows, hanging=hanging)
-        bitmap = button.build()
-        arr = array(bitmap(), dtype=uint8)
-        new_image = Image.fromarray(arr)
-
-        del cached, button, bitmap, array
+                button = ButtonLong(width, height, hover, unavailable, rounded_corners, shadows, hanging, palette=palette)
+            bitmap = button.build()
+            arr = array(bitmap(), dtype=uint8)
+            new_image = Image.fromarray(arr)
+            Cache.store(new_image, width=width, height=height, hover=hover, unavailable=unavailable,
+                        rounded_corners=rounded_corners, shadows=shadows, hanging=hanging, palette=palette)
+            if palette and hover:
+                contrast = ImageEnhance.Contrast(new_image)
+                new_image = contrast.enhance(1.1)
+                saturation = ImageEnhance.Color(new_image)
+                new_image = saturation.enhance(1.03)
+                luminosity = ImageEnhance.Brightness(new_image)
+                new_image = luminosity.enhance(0.4)
+                del contrast, saturation, luminosity
+            del button, bitmap, arr, palette
+        del cached
         return new_image
