@@ -17,13 +17,22 @@ class RectButton():
     def __init__(self, 
                  size: tuple, 
                  text: str = "",
+                 hover: bool = False,
+                 unavailable: bool = False,
                  rounded_corners: list = [True, True, True, True],
                  shadows: list = [True, True, False, False]):
         self.size = (size[0], size[1])
         self.surface = pygame.Surface(self.size, pygame.SRCALPHA)
         self.surface = self.surface.convert_alpha()
         self.surface.fill((255, 255, 0))
-        self.palette = Palette.palette
+        self.hover = hover
+        self.unavailable = unavailable
+        if unavailable:
+            self.palette = Palette.unavailable
+        elif hover:
+            self.palette = Palette.hover
+        else:
+            self.palette = Palette.palette
         self.rounded_corners = rounded_corners
         self.shadow = shadows
         self.text = self._build_text(text)
@@ -47,6 +56,7 @@ class RectButton():
             else:
                 pygame.draw.rect(surface, self.palette[3], (6, 6, 4, 2))
             return surface
+
         # outline
         pygame.draw.rect(surface, self.palette[1], (0, 0, 10, 2))
         pygame.draw.rect(surface, self.palette[1], (0, 0, 2, 8))
@@ -77,6 +87,7 @@ class RectButton():
             pygame.draw.rect(surface, self.palette[4], (0, 4, length if not odd else length-1, 2))
         else:
             pygame.draw.rect(surface, self.palette[3], (0, 4, length if not odd else length-1, 2))
+        
         if rotate and flip:
             surface = pygame.transform.rotate(surface, 90)
             surface = pygame.transform.flip(surface, True, False)
@@ -99,13 +110,16 @@ class RectButton():
         self.surface.blit(pygame.transform.flip(self._corner(self.shadow[0], self.shadow[2], rounded=self.rounded_corners[1]), True, False), (self.size[0]-10, 0))
         self.surface.blit(pygame.transform.flip(self._corner(self.shadow[3], self.shadow[1], rounded=self.rounded_corners[2]), False, True), (0, self.size[1] - 8))
         self.surface.blit(pygame.transform.flip(self._corner(self.shadow[3], self.shadow[2], rounded=self.rounded_corners[3]), True, True), (self.size[0]-10, self.size[1] - 8))
+        
         # edges [2, 4, 6, 8]
         self.surface.blit(self._edge(self.size[0]-20, shadow=self.shadow[0]), (10, 0))
         self.surface.blit(self._edge(self.size[1]-16, rotate=True, shadow=self.shadow[1]), (0, 8))
         self.surface.blit(self._edge(self.size[1]-16, rotate=True, flip=True, shadow=self.shadow[2]), (self.size[0]-6, 8))
         self.surface.blit(self._edge(self.size[0]-20, flip=True, shadow=self.shadow[3]), (10, self.size[1]-6))
+        
         # text
         text_rect = self.text.get_rect(center=(self.size[0] / 2 + 1, self.size[1] / 2 + 1))
+        
         # yell at you if the text will be offset by 1px
         if text_rect.width % 2 != 0 and self.size[0] % 2 == 0:
             warnings.warn(f'Text has an odd width! Consider using an odd width instead of an even one.', Warning, stacklevel=3)
