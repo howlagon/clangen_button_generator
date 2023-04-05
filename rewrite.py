@@ -21,12 +21,14 @@ class RectButton():
                  hover: bool = False,
                  unavailable: bool = False,
                  rounded_corners: list = [True, True, True, True],
-                 shadows: list = [True, True, False, False]):
+                 shadows: list = [True, True, False, False],
+                 hanging: bool = False):
         self.size = (size[0], size[1])
         self.surface = pygame.Surface(self.size, pygame.SRCALPHA)
         self.surface = self.surface.convert_alpha()
         self.hover = hover
         self.unavailable = unavailable
+        self.hanging = hanging
         if unavailable:
             self.palette = Palette.unavailable
         elif hover:
@@ -38,6 +40,8 @@ class RectButton():
         self.text = self._build_text(text)
         
         self._build()
+        if hanging:
+            self._hang()
 
     def _corner(self, shadow_corner1: bool, shadow_corner2: bool, rounded: bool = True):
         surface = pygame.Surface((10, 8), pygame.SRCALPHA)
@@ -120,12 +124,31 @@ class RectButton():
         # text
         text_rect = self.text.get_rect(center=(self.size[0] / 2 + 1, self.size[1] / 2 + 2))
         
+        if text_rect.width > self.size[0]:
+            raise ValueError(f'Text width is too large to fit in the button! Minimum width is {text_rect.width}, recommended {text_rect.width + 12}')
+        elif text_rect.width > self.size[0] - 8:
+            warnings.warn(f'Text width is too small to fit in the button comfortably, minimum width is {text_rect.width + 12}')
+
         # yell at you if the text will be offset by 1px
         if text_rect.width % 2 != 0 and self.size[0] % 2 == 0:
             warnings.warn(f'Text has an odd width! Consider using an odd width instead of an even one.', Warning, stacklevel=3)
         elif text_rect.width % 2 == 0 and self.size[0] % 2 != 0:
             warnings.warn(f'Text has an even width! Consider using an even width instead of an odd one.', Warning, stacklevel=3)
         self.surface.blit(self.text, text_rect)
+    
+    def _hang(self):
+        surface = pygame.Surface((self.size[0], self.size[1]+6), pygame.SRCALPHA)
+        surface = surface.convert_alpha()
+        surface.blit(self.surface, (0, 6))
+
+        connector = pygame.Surface((10, 6))
+        pygame.draw.rect(connector, Palette.palette[2], (0, 0, 10, 6))
+        pygame.draw.rect(connector, Palette.palette[4], (2, 0, 6, 6))
+        pygame.draw.rect(connector, Palette.palette[3], (4, 0, 2, 6))
+
+        surface.blit(connector, (12, 0))
+        surface.blit(connector, (self.size[0]-22, 0))
+        self.surface = surface
 
 class SquareButton(RectButton):
     def _corner(self, shadow_corner1: bool, shadow_corner2: bool, rounded: bool = True):
@@ -172,7 +195,8 @@ class Button():
             hover: bool = False,
             unavailable: bool = False,
             rounded_corners: Union[bool, list] = [True, True, True, True],
-            shadows: Union[bool, list] = [True, True, False, False]) -> pygame.Surface:
+            shadows: Union[bool, list] = [True, True, False, False],
+            hanging: bool = False) -> pygame.Surface:
         if type(rounded_corners) == bool:
             rounded_corners = [rounded_corners]*4
         elif len(rounded_corners) == 4:
@@ -188,9 +212,9 @@ class Button():
             raise ValueError("shadows must be of type bool or list[bool; 4]")
         
         if size[0] == size[1]:
-            button = SquareButton(size, text, hover, unavailable, rounded_corners, shadows)
+            button = SquareButton(size, text, hover, unavailable, rounded_corners, shadows, hanging)
         else:
-            button = RectButton(size, text, hover, unavailable, rounded_corners, shadows)
+            button = RectButton(size, text, hover, unavailable, rounded_corners, shadows, hanging)
         
         return button.surface
     
@@ -200,12 +224,13 @@ class Button():
                      hover: bool = False,
                      unavailable: bool = False,
                      rounded_corners: Union[bool, list] = [True, True, True, True],
-                     shadows: Union[bool, list] = [True, True, False, False]) -> pygame.Surface:
+                     shadows: Union[bool, list] = [True, True, False, False],
+                     hanging: bool = False) -> pygame.Surface:
         _text = FONT.render(text, False, (239, 229, 206))
 
         width = _text.get_width()
         height = _text.get_height()
         size = (width + padding + 12, height + padding + 10)
 
-        button = Button.new(size, text, hover, unavailable, rounded_corners, shadows)
+        button = Button.new(size, text, hover, unavailable, rounded_corners, shadows, hanging)
         return button
