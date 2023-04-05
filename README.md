@@ -3,8 +3,6 @@
 
 #### i am in the process of rewriting this! it will not function as intended, and has unfinished code!!
 
-right now, documentation will be in [the wiki](https://github.com/howlagon/clangen_button_generator/wiki/) (outdated)
-
 ## Requirements
 - [Python 3.11.0](https://www.python.org/downloads/release/python-3110/) or [greater](https://www.python.org/downloads/), 3.11.0 was tested  
 - [Pip3](https://pip.pypa.io/en/stable/installation/)
@@ -22,6 +20,14 @@ python -m pip install -r requirements.txt
 git clone https://github.com/howlagon/clangen_button_generator/ clangen_button_generator
 cd clangen_button_generator
 python -m pip install -r requirements.txt
+```
+## Usage
+```py
+from buttons import Button
+surface = Button.new(size=(120, 30), 
+                     text=":3",
+                     hover=False,
+                     unavailable=False)
 ```
 
 ## TODO
