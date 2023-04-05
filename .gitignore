@@ -4,4 +4,5 @@
 /tests
 # for testing pixel generation
 *.mdp
+*.png
 test.py
